@@ -1,0 +1,107 @@
+Step 1: Update the Packages
+On all three nodes, run the following commands to update the package list and upgrade existing packages:
+
+sudo apt update
+sudo apt upgrade -y
+
+Step 2: Install Docker
+Kubernetes requires Docker as the container runtime. Install Docker on all three nodes:
+
+sudo apt install docker.io -y
+sudo systemctl enable docker
+sudo systemctl start docker
+
+Step 3: Install Kubernetes Tools
+On all three nodes, install the necessary Kubernetes tools:
+
+sudo apt install curl apt-transport-https -y
+
+Install kubeadm, kubelet, and kubectl:
+
+sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt update
+sudo apt install kubeadm kubelet kubectl -y
+
+Step 4: Initialize the Kubernetes Master Node
+Choose one of the Ubuntu nodes to be your master node. On this node, run the following commands:
+
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+This will initialize the Kubernetes control-plane and provide you with a kubeadm join command at the end. Save this command; you'll need it to join worker nodes to the cluster.
+
+Step 5: Configure kubectl
+On the master node, configure the kubectl command-line tool for the current user:
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+Step 6: Install a Pod Network (CNI)
+To enable pod-to-pod communication in the cluster, you need to install a Container Network Interface (CNI). One popular choice is Calico:
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+Step 7: Join Worker Nodes
+On each of the worker nodes, run the kubeadm join command you obtained in Step 4 when initializing the master node. It will look something like this:
+
+sudo kubeadm join <MASTER_IP>:<MASTER_PORT> --token <TOKEN> --discovery-token-ca-cert-hash <CERT_HASH>
+
+
+Replace <MASTER_IP>, <MASTER_PORT>, <TOKEN>, and <CERT_HASH> with the values provided by your master node.
+
+Step 8: Verify the Cluster
+Back on the master node, you can verify that the worker nodes have joined the cluster using:
+
+kubectl get nodes
+
+
+
+
+BOOTSTRAPPING THE MASTER NODE (IN MASTER)
+
+kubeadm init
+ 
+
+COPY THE COMMAND TO RUN IN NODES & SAVE IN NOTEPAD
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+
+CONFIGURE WORKER NODES (IN NODES)
+
+COPY LONG CODE PROVIDED MY MASTER IN NODE NOW LIKE CODE GIVEN BELOW
+
+e.g- kubeadm join 172.31.6.165:6443 --token kl9fhu.co2n90v3rxtqllrs --discovery-token-ca-cert-hash sha256:b0f8003d23dbf445e0132a53d7aa1922bdef8d553d9eca06e65c928322b3e7c0
+
+GO TO MASTER AND RUN THIS COMMAND
+kubectl get nodes
+
+
+
+
+
+To create pods on nodes in Kubernetes, you need to write YAML configuration files that describe the pod specifications. Here's a basic example of a YAML file to create a pod:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - name: my-container
+      image: nginx:latest
+
+
+kubectl apply -f my-pod.yaml
+
+
+
+
+
+
